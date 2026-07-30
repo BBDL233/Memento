@@ -90,7 +90,10 @@
 ```
 plugins/插件文件夹名/
 ├─ config.yml      # 主配置文件
-└─ menus/          # GUI菜单文件（无GUI可删除此段）
+└─ menus/          # GUI菜单文件
+└─ playerdata/<player uuid>/  玩家数据位置
+                └─ config.yl  玩家设置
+                └─ xxxx-x-x-x 死亡时的文件
 ```
 
 规则：
