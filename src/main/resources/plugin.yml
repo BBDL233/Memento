@@ -1,0 +1,37 @@
+name: Memento
+version: 1.0.0
+main: com.bbdl.plugin.Memento
+api-version: '26.1'
+description: 管理玩家死亡的 Paper 插件
+author: BBDL
+
+#commands:
+#  lastdeath:
+#    description: 查看上一次死亡的位置
+#    usage: /lastdeath
+
+permissions:
+  Memento.toggle.others:
+    description: 允许开关别人的复活提醒
+    default: op
+  Memento.view:
+    description: 允许查看所有人的死亡消息（无视禁用）
+    default: op
+  Memento.reload:
+    description: 允许插件重载
+    default: op
+  Memento.viewall:
+    description: 能看到所有人的死亡广播
+    default: op
+  Memento.free-custom:
+    description: 管理员免扣费
+    default: op
+  Memento.get:
+    description: 管理员获取玩家背包
+    default: op
+  Memento.keepInv:
+    description: 死亡不掉落背包
+    default: op
+  Memento.keepXp:
+    description: 死亡不掉落经验
+    default: op

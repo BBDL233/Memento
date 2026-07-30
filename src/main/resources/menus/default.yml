@@ -1,0 +1,175 @@
+# ============================================================
+#  第一页：死亡背包主界面
+#  文件：插件数据目录/menus/01-backpack.yml
+#
+#  本页展示的特性：
+#    ✔ 静态装饰物品（玻璃板边框）
+#    ✔ 动态物品引用（material: item_N）
+#    ✔ 物品占位符（{item_N_name}、{item_N_amount}、{item_N_material}）
+#    ✔ 全局占位符（{death_year}、{death_world} 等）
+#    ✔ PlaceholderAPI（%player_name%）
+#    ✔ MiniMessage 颜色/格式标签
+#    ✔ 点击动作（next / close）
+#    ✔ 自动填充（未配置的槽位自动放入剩余死亡物品）
+#    ✔ lore 中 \n 换行
+# ============================================================
+
+# ---------- 标题 ----------
+# 支持 MiniMessage + PlaceholderAPI + 全局占位符
+title: "<dark_gray>☠ <red>死亡背包 <dark_gray>| <gray>%player_name% <dark_gray>| <yellow>{death_month}-{death_day} {death_hour}:{death_minute}"
+
+# ---------- GUI 大小 ----------
+# 54 = 6 行箱子（最大值）
+size: 54
+
+# ---------- 物品配置 ----------
+# 只配置了第一行（边框+标题）、第二行（快捷栏 item_0~8）、第六行（功能栏）
+# 第三~五行（槽位 18~44）完全不写 → 触发自动填充，
+# 死亡背包中未被显式引用的剩余物品会依次填入这些空位
+items:
+
+  # ==================== 第一行（0~8）：顶部装饰边框 ====================
+
+  0:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  1:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  2:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+  3:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  # 槽位 4：中央标题物品，展示全局占位符 + PAPI
+  4:
+    material: SKELETON_SKULL
+    name: "<red><bold>☠ 死亡记录"
+    lore:
+      - ""
+      - "<gray>玩家: <white>%player_name%"
+      - "<gray>世界: <aqua>{death_world}"
+      - "<gray>坐标: <yellow>{death_x}<gray>, <yellow>{death_y}<gray>, <yellow>{death_z}"
+      - "<gray>时间: <green>{death_year}-{death_month}-{death_day} {death_hour}:{death_minute}:{death_second}"
+      - ""
+      - "<dark_gray>时间戳: {deathtime}"
+      - "<dark_gray>毫秒: .{death_millis}"
+
+  5:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  6:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  7:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  8:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  # ==================== 第二行（9~17）：快捷栏物品（显式引用） ====================
+  # 展示 item_N 动态引用 + 自定义 name/lore 覆盖
+  # 每个物品的 lore 里用 {item_N_amount}、{item_N_material} 展示占位符系统
+
+  9:
+    material: item_0
+    # 不写 name → 使用物品原始显示名（保留附魔名、自定义名等）
+    # 不写 lore → 使用物品原始 lore
+    # 最简写法：只写 material 即可
+
+  10:
+    material: item_1
+    # 覆盖显示名，引用物品占位符
+    name: "<yellow>{item_1_name}"
+    lore:
+      - "<gray>材质: <white>{item_1_material}"
+      - "<gray>数量: <white>{item_1_amount}"
+
+  11:
+    material: item_2
+    name: "<yellow>{item_2_name}"
+    lore:
+      - "<gray>材质: <white>{item_2_material} × {item_2_amount}"
+      # \n 换行演示：这一行配置会渲染成两行 lore
+      - "<gray>原始描述:\n<dark_gray>{item_2_lore}"
+
+  12:
+    material: item_3
+
+  13:
+    material: item_4
+
+  14:
+    material: item_5
+
+  15:
+    material: item_6
+
+  16:
+    material: item_7
+
+  17:
+    material: item_8
+
+  # ==================== 第三~五行（18~44）：不配置 ====================
+  # 这 27 个槽位完全留空，触发自动填充机制：
+  # 死亡背包中 item_9 ~ item_40 里未被上面显式引用的物品，
+  # 会按顺序自动填入这些空位，保留原始名称和 lore。
+  #
+  # 这就是"不写 = 自动填充"的效果，服主无需手动列出所有 36+ 个物品。
+
+  # ==================== 第六行（45~53）：底部功能栏 ====================
+
+  45:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  46:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  47:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  48:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  # 槽位 49：关闭按钮（展示 click: close）
+  49:
+    material: BARRIER
+    name: "<red><bold>✖ 关闭"
+    lore:
+      - "<gray>点击关闭此界面"
+    click:
+      - "close"
+
+  50:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  51:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  52:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  # 槽位 53：下一页按钮（展示 click: next）
+  53:
+    material: ARROW
+    name: "<green><bold>下一页 ➤"
+    lore:
+      - "<gray>查看装备与详细信息"
+    click:
+      - "next"

@@ -1,0 +1,243 @@
+# ============================================================
+#  第二页：装备栏 + 死亡报告
+#  文件：插件数据目录/menus/02-equipment.yml
+#
+#  本页展示的特性：
+#    ✔ 多页翻页（prev 返回上一页）
+#    ✔ 装备槽位引用（item_36~40 = 盔甲 + 副手）
+#    ✔ 全局占位符全量展示（时间拆分 + 坐标）
+#    ✔ 自定义指令点击动作（click 执行服务器命令）
+#    ✔ 静态物品 + MiniMessage 复杂格式
+#    ✔ 自动填充（剩余物品填入空位）
+# ============================================================
+
+title: "<dark_gray>☠ <gold>装备 & 报告 <dark_gray>| <gray>%player_name%"
+
+size: 54
+
+items:
+
+  # ==================== 第一行（0~8）：顶部导航栏 ====================
+
+  # 槽位 0：上一页按钮（展示 click: prev）
+  0:
+    material: ARROW
+    name: "<green><bold>➤ 上一页"
+    lore:
+      - "<gray>返回背包主界面"
+    click:
+      - "prev"
+
+  1:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  2:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  3:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  4:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  5:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  6:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  7:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  8:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  # ==================== 第二行（9~17）：装备展示区 ====================
+  # Bukkit 玩家背包槽位约定：
+  #   36 = 靴子, 37 = 护腿, 38 = 胸甲, 39 = 头盔, 40 = 副手
+  # 这里显式引用，并用占位符标注部位名称
+
+  9:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  10:
+    material: item_39
+    name: "<aqua>🪖 头盔"
+    lore:
+      - "<gray>物品: <white>{item_39_name}"
+      - "<gray>材质: <white>{item_39_material}"
+
+  11:
+    material: item_38
+    name: "<aqua>🛡 胸甲"
+    lore:
+      - "<gray>物品: <white>{item_38_name}"
+      - "<gray>材质: <white>{item_38_material}"
+
+  12:
+    material: item_37
+    name: "<aqua>👖 护腿"
+    lore:
+      - "<gray>物品: <white>{item_37_name}"
+      - "<gray>材质: <white>{item_37_material}"
+
+  13:
+    material: item_36
+    name: "<aqua>👢 靴子"
+    lore:
+      - "<gray>物品: <white>{item_36_name}"
+      - "<gray>材质: <white>{item_36_material}"
+
+  14:
+    material: item_40
+    name: "<aqua>🤚 副手"
+    lore:
+      - "<gray>物品: <white>{item_40_name}"
+      - "<gray>材质: <white>{item_40_material}"
+
+  15:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  16:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  17:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  # ==================== 第三行（18~26）：死亡报告面板 ====================
+  # 用静态物品 + lore 展示所有全局占位符
+  # 注意：静态物品的 lore 走 msg.formatMsg(null, line, null, player, false)
+  # 所以只支持 PAPI（%xxx%），不支持 {death_xxx} 花括号占位符！
+  # 要展示 {death_xxx}，必须用动态物品（item_N）或写在标题里。
+  #
+  # 解决方案：用一个"信息板"动态物品，引用一个必定存在的槽位，
+  # 然后在 lore 里混合使用 item 占位符和全局占位符（因为 phh.putAll(ph)）。
+  # 这里引用 item_0（快捷栏第一格，几乎必定有物品）。
+
+  18:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  19:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  20:
+    material: item_0
+    name: "<gold><bold>📋 死亡报告"
+    lore:
+      - ""
+      - "<yellow>━━━ 时间信息 ━━━"
+      - "<gray>年份: <white>{death_year}"
+      - "<gray>月份: <white>{death_month}"
+      - "<gray>日期: <white>{death_day}"
+      - "<gray>小时: <white>{death_hour}"
+      - "<gray>分钟: <white>{death_minute}"
+      - "<gray>秒数: <white>{death_second}"
+      - "<gray>毫秒: <white>{death_millis}"
+      - "<gray>完整时间戳: <dark_gray>{deathtime}"
+      - ""
+      - "<yellow>━━━ 位置信息 ━━━"
+      - "<gray>世界: <aqua>{death_world}"
+      - "<gray>X: <yellow>{death_x}"
+      - "<gray>Y: <yellow>{death_y}"
+      - "<gray>Z: <yellow>{death_z}"
+      - ""
+      - "<yellow>━━━ 玩家信息 ━━━"
+      - "<gray>名称: <white>%player_name%"
+      - "<gray>显示名: <white>%player_displayname%"
+
+  21:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  22:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  23:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  24:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  25:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  26:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  # ==================== 第四~五行（27~44）：不配置 ====================
+  # 自动填充区域：第一页已引用 item_0~8，第二页引用了 item_0,36~40
+  # 剩余的 item_9~35 中未被引用的物品会自动填入这里
+  # （注意：item_0 在两页都被引用，但每页独立构建，互不影响）
+
+  # ==================== 第六行（45~53）：底部功能栏 ====================
+
+  45:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  46:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  47:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  # 槽位 48：自定义指令演示（点击执行服务器命令）
+  # 支持多条指令按顺序执行
+  48:
+    material: BOOK
+    name: "<aqua><bold>📢 广播死亡信息"
+    lore:
+      - "<gray>点击向全服广播此次死亡记录"
+      - "<dark_gray>（演示自定义 click 指令）"
+    click:
+      - "say [死亡记录] %player_name% 于 {death_world} ({death_x},{death_y},{death_z}) 阵亡"
+
+  49:
+    material: BARRIER
+    name: "<red><bold>✖ 关闭"
+    lore:
+      - "<gray>点击关闭此界面"
+    click:
+      - "close"
+
+  # 槽位 50：上一页按钮（底部也放一个，方便操作）
+  50:
+    material: ARROW
+    name: "<green><bold>➤ 返回背包"
+    lore:
+      - "<gray>回到第一页"
+    click:
+      - "prev"
+
+  51:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  52:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  53:
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "

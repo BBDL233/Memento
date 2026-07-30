@@ -1,0 +1,466 @@
+# ============================================================
+#  Memento - 死亡保护与遗物管理
+#  配置文件 (config.yml)
+# ============================================================
+#
+#  ┌───────────────────────────────────────────────────────────┐
+#  │  颜色与格式支持（本插件使用 MiniMessage 解析）              │
+#  ├───────────────────────────────────────────────────────────┤
+#  │                                                           │
+#  │  ① MiniMessage 标签（推荐）:                               │
+#  │     <red> <green> <gold> <gray> <aqua> <white> ...        │
+#  │     <bold> <italic> <underlined> <strikethrough>          │
+#  │     <gradient:red:blue>渐变文本</gradient>                 │
+#  │     <hover:show_text:'悬停提示'>悬停我</hover>             │
+#  │     <click:run_command:'/death help'>点击执行指令</click>   │
+#  │                                                           │
+#  │  ② 十六进制颜色:                                           │
+#  │     <#FF5555> <color:#00AA00> <#336699>                   │
+#  │                                                           │
+#  │  ③ 旧版 & 代码（兼容，自动转换为 MiniMessage）:             │
+#  │     &c &a &6 &7 &l &o &n &m                               │
+#  │                                                           │
+#  │  ④ 关闭标签:                                               │
+#  │     </red> </bold> </gradient> 或统一用 <reset>            │
+#  │                                                           │
+#  └───────────────────────────────────────────────────────────┘
+#
+#  占位符通用说明:
+#    {cmd}  → 主指令名（即下方 commands.main.name 的值）
+#    其余占位符在各消息条目旁单独标注
+#
+#  PlaceholderAPI 支持:
+#    所有发送给玩家的消息均支持 PAPI 占位符（%player_name% 等）
+#    控制台日志不支持 PAPI
+#
+# ============================================================
+
+
+# ==================== 菜单文件 ====================
+# 死亡背包 GUI 的布局文件列表（位于 plugins/Memento/menus/ 目录下）
+# 按列表顺序加载，第一个为默认菜单
+# 每个文件对应 GUI 的一页，玩家可通过菜单中的翻页按钮切换
+menus:
+    - "default.yml"
+    - "default2.yml"
+
+
+# ==================== 指令自定义 ====================
+# 可自定义主指令名和所有子指令的触发词
+# 子指令支持多个别名（列表形式），玩家输入任意一个均可触发
+# 别名不区分大小写
+commands:
+    main:
+        # 主指令名，玩家输入 /death 触发
+        # 修改后所有消息中的 {cmd} 占位符会自动替换为此值
+        # 注意：修改主指令名后需要重载或重启才能生效
+        #       Paper 服务端支持热重载，Spigot 需要重启
+        name: "death"
+    sub:
+        help:
+            - "help"
+        toggle:
+            - "toggle"
+        custom:
+            - "custom"
+        broadcast:
+            - "broadcast"
+        inv:
+            - "inv"
+        reload:
+            - "reload"
+        get:
+            - "get"
+
+
+# ==================== 功能设置 ====================
+settings:
+
+    # ---------- 自定义消息长度限制 ----------
+    # 玩家通过 /death custom 设置的自定义死亡消息的字符数范围
+    # 计算规则：不包含 {} 占位符本身的字符
+    # 例如 "{player} 被 {killer} 杀死" 的实际长度 = " 被  杀死" = 4 个字符
+    min-length: 0
+    max-length: 20
+
+    # ---------- 严格模式 ----------
+    # 总开关：关闭后不再校验自定义消息中占位符是否齐全，允许保存任意内容
+    strict: true
+    # 缺少占位符时是否向玩家发送提示消息（告知缺了哪个占位符）
+    strict-prompt: true
+    # 各占位符缺失时的处理策略:
+    #   true  = 拦截设置，要求玩家补全后重试
+    #   false = 仅提示警告，允许保存（缺失的占位符在播报时显示为空）
+    strict-require-player: true
+    strict-require-killer: true
+    strict-require-weapon: true
+    strict-require-cause: true
+
+    # ---------- 预览示例值 ----------
+    # /death custom 设置成功后，用以下示例值替换占位符进行预览
+    # 让玩家直观看到最终播报效果
+    # 可用占位符取决于消息类型:
+    #   player 类型: {player}（自动用玩家自己的名字） {killer} {weapon}
+    #   cause 类型:  {player}（自动用玩家自己的名字） {cause}
+    preview:
+        killer: "Notch"
+        weapon: "钻石剑"
+        cause: "摔死"
+
+    # ---------- 历史记录 ----------
+    # 内存中保留的最大死亡记录条数（0 = 不限制）
+    # 影响 /death inv 和 /death get 可查看的历史死亡次数上限
+    max-history: 0
+    # 磁盘上持久化保存的最大死亡记录条数（0 = 不限制）
+    # 超出上限时，最旧的死亡记录文件会被自动删除
+    # 建议设置一个合理值（如 10~50），防止长期运行后磁盘占用过大
+    save-max-history: 0
+
+    # ---------- 自定义死亡消息收费 ----------
+    custom-death-message:
+        # 是否开启收费（false = 免费使用，无需 Vault 和经济插件）
+        # 设为 true 时，服务器必须安装 Vault + 经济插件，否则功能自动禁用
+        enabled: true
+        # 每次设置自定义消息扣除的金额（支持小数）
+        cost: 10000.0
+
+
+# ==================== 消息模板 ====================
+# 所有消息均支持:
+#   - MiniMessage 标签（<red> <bold> <gradient:...> 等）
+#   - 旧版 & 颜色代码（&c &a &l 等，自动转换）
+#   - 十六进制颜色（<#FF5555>）
+#   - PlaceholderAPI 占位符（仅发送给玩家的消息）
+#
+# 占位符格式: {xxx}，具体可用占位符见各条目注释
+
+messages:
+
+    # ---------- /death help 帮助页面 ----------
+    # 可用占位符: {cmd}
+    help:
+        header: "<gold><bold>═══ {cmd} 帮助 ═══</bold></gold>"
+        toggle: "<gray>/{cmd} toggle [玩家] <true|false></gray> <dark_gray>-</dark_gray> <white>切换复活提醒</white>"
+        broadcast: "<gray>/{cmd} broadcast <true|false></gray> <dark_gray>-</dark_gray> <white>全局死亡广播开关</white>"
+        custom: "<gray>/{cmd} custom <player|cause> <消息></gray> <dark_gray>-</dark_gray> <white>自定义死亡消息</white>"
+        inv: "<gray>/{cmd} inv <玩家> [历史] [页码]</gray> <dark_gray>-</dark_gray> <white>查看死亡背包</white>"
+        help: "<gray>/{cmd} help</gray> <dark_gray>-</dark_gray> <white>显示此帮助</white>"
+
+    # ---------- 通用消息 ----------
+    normal:
+        # 所有 normal 消息的前缀（拼接在消息最前面）
+        # 设为 "" 可取消前缀
+        # 可用占位符: 无
+        prefix: "<dark_gray>[</dark_gray><red>Memento</red><dark_gray>]</dark_gray> "
+
+        # /help 列表里显示的指令描述
+        # 注意：此处颜色标签无效！Bukkit 的 /help 列表不渲染颜色，会显示为纯文本
+        # 可用占位符: 无
+        command-description: "Memento - 查看上次死亡位置"
+
+        # 控制台执行玩家专属指令时的提示
+        # 可用占位符: 无
+        only-player: "<red>只有玩家才可以使用此指令</red>"
+
+        # 指令参数错误时的用法提示
+        # 可用占位符: {cmd}
+        invalid-usage: "<yellow>用法: /{cmd} toggle [player] [true|false]</yellow>"
+
+        # 权限不足时的提示
+        # 可用占位符: 无
+        no-permission: "<red>你没有权限执行此操作</red>"
+
+        # 目标玩家不在线或不存在时的提示
+        # 可用占位符: 无
+        player-not-found: "<red>找不到该玩家</red>"
+
+        # 输入了非数字内容时的提示
+        # 可用占位符: 无
+        invalid-number: "<red>请输入有效的数字</red>"
+
+        # 玩家输入了不存在的子指令
+        # 可用占位符: {cmd}, {input}（玩家输入的原始文本）
+        unknown-command: "<red>未知指令: {input}</red><gray>，输入 /{cmd} help 查看帮助</gray>"
+
+        # 控制台输入了不存在的子指令（无颜色，纯文本输出到控制台）
+        # 可用占位符: {cmd}, {input}
+        console-unknown: "未知指令: {input}，输入 /{cmd} help 查看帮助"
+
+        # 子指令已注册但未实现（防御性兜底，正常不会触发）
+        # 可用占位符: {func}（功能名）
+        not-implemented: "<red>功能 {func} 尚未实现</red>"
+
+        # ---------- 死亡位置查询 ----------
+
+        # 查询自己的上次死亡位置（/death 无参数）
+        # 可用占位符: {player}（自己的名字）, {world}, {x}, {y}, {z}
+        self-death-location: "<gray>你上次死在了</gray> <aqua>{world}</aqua> <gray>的</gray> <yellow>{x} {y} {z}</yellow>"
+
+        # 查询其他玩家的上次死亡位置（/death <玩家名>）
+        # 可用占位符: {player}（目标玩家名）, {world}, {x}, {y}, {z}
+        other-death-location: "<aqua>{player}</aqua> <gray>上次死在了</gray> <aqua>{world}</aqua> <gray>的</gray> <yellow>{x} {y} {z}</yellow>"
+
+        # 自己没有死亡记录
+        # 可用占位符: 无
+        no-death-record: "<gray>你还没有死亡记录!</gray>"
+
+        # 目标玩家没有死亡记录（或对方关闭了广播且你无 Memento.view 权限）
+        # 可用占位符: 无
+        no-death-record-other: "<gray>该玩家没有死亡记录!</gray>"
+
+        # ---------- 复活提醒开关 ----------
+
+        # 开启自己的复活提醒
+        # 可用占位符: 无
+        notify-enabled: "<green>复活提醒已开启</green>"
+
+        # 关闭自己的复活提醒
+        # 可用占位符: 无
+        notify-disabled: "<red>复活提醒已关闭</red>"
+
+        # 开启其他玩家的复活提醒（管理员操作）
+        # 可用占位符: {player}（目标玩家名）
+        notify-other-enabled: "<green>{player} 的复活提醒已开启</green>"
+
+        # 关闭其他玩家的复活提醒（管理员操作）
+        # 可用占位符: {player}（目标玩家名）
+        notify-other-disabled: "<red>{player} 的复活提醒已关闭</red>"
+
+        # 复活时自动发送的死亡位置提醒（需开启复活提醒）
+        # 可用占位符: {world}, {x}, {y}, {z}
+        respawn-reminder: "<gray>你上次死在了</gray> <aqua>{world}</aqua> <gray>的</gray> <yellow>{x} {y} {z}</yellow>"
+
+        # ---------- 死亡广播 ----------
+
+        # 被其他玩家击杀时的广播消息
+        # 可用占位符: {player}（死者名）, {killer}（击杀者名）, {weapon}（武器材质枚举名，如 DIAMOND_SWORD）
+        # 注意：{weapon} 是英文材质名（ItemStack.getType().name()），不是中文
+        death-by-player: "<#FF5555>{player}</#FF5555> <gray>被</gray> <#FF5555>{killer}</#FF5555> <gray>用</gray> <yellow>{weapon}</yellow> <gray>杀死</gray>"
+
+        # 因环境/怪物等原因死亡时的广播消息
+        # 可用占位符: {player}（死者名）, {cause}（死因枚举名，如 FALL, LAVA, DROWNING, ENTITY_ATTACK）
+        # 注意：{cause} 是 EntityDamageEvent.DamageCause 的枚举名，不是中文
+        death-by-cause: "<#FF5555>{player}</#FF5555> <gray>因为</gray> <yellow>{cause}</yellow> <gray>死亡</gray>"
+
+        # ---------- 全局广播开关 ----------
+
+        # 开启自己的全局死亡广播
+        # 可用占位符: 无
+        broadcast-enabled: "<green>已开启全局死亡广播</green><gray>，同时你可以看到其他开启的玩家的全局广播</gray>"
+
+        # 关闭自己的全局死亡广播
+        # 可用占位符: 无
+        broadcast-disabled: "<red>已关闭全局死亡广播</red><gray>，你无法看到任何死亡广播</gray>"
+
+        # 查询某玩家的广播状态（/death broadcast <玩家名>）
+        # 可用占位符: {player}（目标玩家名）, {value}（true/false）
+        broadcast-status: "<gray>玩家</gray> <aqua>{player}</aqua> <gray>的全局广播状态为</gray> <yellow>{value}</yellow>"
+
+        # 管理员开启其他玩家的广播
+        # 可用占位符: {player}（目标玩家名）
+        broadcast-other-enabled: "<green>已开启 {player} 的全局广播</green>"
+
+        # 管理员关闭其他玩家的广播
+        # 可用占位符: {player}（目标玩家名）
+        broadcast-other-disabled: "<red>已关闭 {player} 的全局广播</red>"
+
+        # ---------- 自定义消息相关 ----------
+
+        # custom 指令的通用用法提示（未指定类型或类型错误时）
+        # 可用占位符: {cmd}
+        custom-usage: "<yellow>用法: /{cmd} custom [player|cause] <自定义消息></yellow>"
+
+        # player 类型的详细用法（被玩家击杀时的自定义消息）
+        # 可用占位符: {cmd}
+        # 提示玩家可用的占位符: {player} {killer} {weapon}
+        custom-usage-player: "<yellow>用法: /{cmd} custom player <消息></yellow> <gray>占位符: {player} {killer} {weapon}</gray>"
+
+        # cause 类型的详细用法（环境死亡时的自定义消息）
+        # 可用占位符: {cmd}
+        # 提示玩家可用的占位符: {player} {cause}
+        custom-usage-cause: "<yellow>用法: /{cmd} custom cause <消息></yellow> <gray>占位符: {player} {cause}</gray>"
+
+        # 消息长度不符合要求时的提示
+        # 可用占位符: {min}（最小长度）, {max}（最大长度）, {current}（当前纯文本字符数，不含占位符）
+        length-invalid: "<red>仅支持 {min}~{max} 个字符</red><gray>（当前 {current} 个，不包括有效占位符）</gray>"
+
+        # 缺少 {player} 占位符时的提示
+        # 可用占位符: 无
+        missing-placeholder-player: "<red>缺少占位符 {player}！</red><gray>使用 {player} 代表你自己</gray>"
+
+        # 缺少 {killer} 占位符时的提示
+        # 可用占位符: 无
+        missing-placeholder-killer: "<red>缺少占位符 {killer}！</red><gray>使用 {killer} 代表杀手</gray>"
+
+        # 缺少 {weapon} 占位符时的提示
+        # 可用占位符: 无
+        missing-placeholder-weapon: "<red>缺少占位符 {weapon}！</red><gray>使用 {weapon} 代表武器名称</gray>"
+
+        # 缺少 {cause} 占位符时的提示
+        # 可用占位符: 无
+        missing-placeholder-cause: "<red>缺少占位符 {cause}！</red><gray>使用 {cause} 代表死因</gray>"
+
+        # 占位符校验未通过的总结提示（有必需占位符缺失且 strict 开启时追加发送）
+        # 可用占位符: 无
+        validation-failed: "<red>请检查占位符设置后重试！</red>"
+
+        # 自定义消息设置成功（紧接着会发送一条预览消息，预览内容不在此配置）
+        # 可用占位符: 无
+        custom-set-success: "<green>成功设置自定义死亡消息(预览):</green> "
+
+        # 自定义消息功能不可用（config 开了收费但无 Vault/经济插件）
+        # 可用占位符: 无
+        custom-msg-disabled: "<red>自定义死亡消息功能当前不可用</red>"
+
+        # 余额不足时的提示
+        # 可用占位符: {cost}（所需金额，来自 settings.custom-death-message.cost）
+        not-enough-money: "<red>余额不足，需要 {cost} 元</red>"
+
+        # 扣费失败（经济插件 withdrawPlayer 返回失败）
+        # 可用占位符: 无
+        charge-failed: "<red>扣费失败，请稍后重试</red>"
+
+        # 扣费成功
+        # 可用占位符: {cost}（扣除金额）, {balance}（扣费后剩余余额）
+        charge-success: "<green>扣费成功！</green><gray>扣除金额：{cost} 余额: {balance}</gray>"
+
+    # ---------- GUI 相关消息 ----------
+    gui:
+        # 控制台尝试打开 GUI 时的提示
+        # 可用占位符: 无
+        only-player: "<red>该指令只能由玩家打开</red>"
+
+        # 请求的历史次数超出限制
+        # 可用占位符: {max-history}（settings.max-history 的值）, {history}（玩家输入的值）
+        history-out-of-range: "<red>仅支持查看 {max-history} 次死亡内的背包</red><gray>，你输入了 {history}</gray>"
+
+        # 目标玩家没有死亡背包数据（文件夹不存在 / 记录数不足 / 背包全空）
+        # 可用占位符: 无
+        no-death-inventory: "<gray>死亡背包不存在</gray>"
+
+        # 菜单配置文件解析出错（输出到控制台调试日志）
+        # 可用占位符: {error}（异常信息）
+        parse-error: "<red>菜单配置解析错误: {error}</red>"
+
+        # 清理旧死亡记录文件失败（输出到控制台调试日志）
+        # 可用占位符: {filename}（文件名）
+        delete-old-failed: "<red>无法删除旧死亡背包: {filename}</red>"
+
+        # 正在加载菜单文件（调试日志）
+        # 可用占位符: {file}（菜单文件名）
+        loading-menu: "<gray>加载菜单文件: {file}</gray>"
+
+        # 查看他人背包时被拒绝（对方或自己关闭了广播，且无 Memento.viewall 权限）
+        # 可用占位符: 无
+        view-off: "<red>你关闭了死亡广播，因此无法查看别人的死亡记录</red>"
+
+        # /death get 获取的潜影盒物品名称
+        # 可用占位符:
+        #   {target}       - 目标玩家名（死亡者）
+        #   {player}       - 提取者名（执行指令的人）
+        #   {page}         - 当前是第几个盒子（从1开始）
+        #   {maxPage}      - 盒子总数
+        #   {items}        - 物品总数（所有盒子合计）
+        #   {deathtime}    - 死亡时间戳（毫秒）
+        #   {death_year}   - 年（如 2026）
+        #   {death_month}  - 月（补零，如 07）
+        #   {death_day}    - 日（补零，如 29）
+        #   {death_hour}   - 时（24小时制，补零，如 14）
+        #   {death_minute} - 分（补零，如 45）
+        #   {death_second} - 秒（补零，如 22）
+        #   {death_millis} - 毫秒（补零，如 456）
+        get-container-name: "<gold>{target} 的遗物 {page}/{maxPage}</gold> <gray>- {death_year}年{death_month}月{death_day}日{death_hour}时{death_minute}分{death_second}秒{death_millis}毫秒</gray>"
+
+        # /death get 获取的潜影盒物品 Lore（列表，每项一行）
+        # 可用占位符（同上）:
+        #   {target}, {player}, {page}, {maxPage}, {items}, {deathtime},
+        #   {death_year}, {death_month}, {death_day},
+        #   {death_hour}, {death_minute}, {death_second}, {death_millis},
+        #   {death_world}, {death_x}, {death_y}, {death_z}
+        get-container-lore:
+            - "<gray>来源玩家:</gray> <white>{target}</white>"
+            - "<gray>死亡时间:</gray> <white>{death_year}年{death_month}月{death_day}日{death_hour}时{death_minute}分{death_second}秒{death_millis}毫秒</white>"
+            - "<gray>死亡位置:</gray> <aqua>{death_world}</aqua> <yellow>{death_x} {death_y} {death_z}</yellow>"
+            - "<gray>物品总数:</gray> <green>{items}</green>"
+            - "<gray>提取者:</gray> <white>{player}</white>"
+
+        # /death get 成功获取背包时的提示（每生成一个盒子发一次）
+        # 可用占位符:
+        #   {target}, {player}, {page}, {maxPage}, {items},
+        #   {death_year}, {death_month}, {death_day},
+        #   {death_hour}, {death_minute}, {death_second}, {death_millis}
+        get-success: "<green>成功拿到</green> <aqua>{target}</aqua> <gray>在 {death_year}年{death_month}月{death_day}日{death_hour}时{death_minute}分{death_second}秒{death_millis}毫秒 时死亡的背包</gray>"
+
+    # ---------- 调试/日志消息（输出到控制台） ----------
+    debug:
+        # 调试日志前缀（拼接在所有 debug 消息前面）
+        # 可用占位符: 无
+        prefix: "<dark_gray>[</dark_gray><yellow>Debug</yellow><dark_gray>]</dark_gray> "
+
+        # 插件启动成功
+        # 可用占位符: 无
+        on-enable: "<green>插件已加载!</green>"
+
+        # 插件卸载
+        # 可用占位符: 无
+        on-disable: "<gray>插件已卸载!</gray>"
+
+        # 反射获取 CommandMap 失败（插件将无法响应任何指令）
+        # 可用占位符: 无
+        commandmap-failed: "<red>无法获取 CommandMap，主指令注册失败！插件将无法响应任何指令。</red>"
+
+        # 反射过程中抛出异常
+        # 可用占位符: 无
+        reflect-failed: "<red>反射获取 CommandMap 失败</red>"
+
+        # 主指令注册成功
+        # 可用占位符: {cmd}（主指令名）
+        command-registered: "<green>主指令 /{cmd} 注册成功</green>"
+
+        # 主指令热重载成功（仅 Paper）
+        # 可用占位符: {cmd}（新指令名）
+        command-hot-reloaded: "<green>主指令已热重载为 /{cmd}</green>"
+
+        # 主指令名变更但无法热重载（Spigot）
+        # 可用占位符: {cmd}（新指令名）
+        command-restart-needed: "<yellow>主指令名已改为 /{cmd}，但当前服务端不支持热重注册，需重启服务器生效。</yellow>"
+
+        # 调试模式开启（控制台 /death toggle）
+        # 可用占位符: 无
+        toggle-on: "<green>调试模式已开启</green>"
+
+        # 调试模式关闭（控制台 /death toggle）
+        # 可用占位符: 无
+        toggle-off: "<gray>调试模式已关闭</gray>"
+
+        # playerdata 目录下发现非法文件夹（非 UUID 命名）
+        # 可用占位符: {filename}（文件夹名）
+        skip-file: "<yellow>跳过无效文件 {filename}</yellow>"
+
+        # 玩家数据保存失败
+        # 可用占位符: {uuid}（玩家UUID）, {error}（异常消息）
+        save-error: "<red>{uuid} 保存失败: {error}</red>"
+
+        # 玩家死亡时的日志记录
+        # 可用占位符: {player}（死者名）, {world}, {x}, {y}, {z}
+        death-log: "<aqua>{player}</aqua> <gray>死亡！位置:</gray> <yellow>{world} {x} {y} {z}</yellow>"
+
+        # 菜单文件加载成功
+        # 可用占位符: {menus}（第几个菜单，从1开始）, {menu}（文件名）
+        menu-loaded: "<green>成功加载第{menus}个菜单：{menu}</green>"
+
+        # 插件重载完成（玩家 /death reload 或控制台 /death reload）
+        # 可用占位符: {cost}（耗时，单位毫秒）
+        success-reload: "<green>插件重载完成!</green> <gray>耗时 {cost}ms</gray>"
+
+        # 开启了收费但未检测到经济插件（启动时警告）
+        # 可用占位符: 无
+        no-vault: "<red>已开启收费，但未检测到经济插件(Vault)，功能已禁用！</red>"
+
+        # 无法创建 playerdata 目录
+        # 可用占位符: 无
+        mkdir-failed-playerdata: "<red>无法创建 playerdata 目录</red>"
+
+        # 无法创建 menus 目录
+        # 可用占位符: 无
+        mkdir-failed-menus: "<red>无法创建 menus 目录</red>"
