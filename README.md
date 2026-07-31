@@ -1,4 +1,4 @@
-#Memento
+# Memento
 
 ## 简介
 
@@ -50,8 +50,17 @@
 
 | 指令 | 功能说明 | 执行者 |
 | --- | --- | --- |
-| `/death help` | 查看插件帮助菜单 | 玩家/控制台 |
+| `/death` | 查看上一次死亡的位置 | 玩家/控制台 |
+| `/death help` | 查看插件帮助菜单 | 管理员/控制台 |
 | `/death reload` | 重载全部插件配置 | 管理员/控制台 |
+| `/death broadcast` | 开关全局死亡广播 | 玩家/管理员 |
+| `/death custom <cause/player> <message>` | 自定义死亡消息 | 玩家/管理员 |
+| `/death get <player> <history>` | 获取玩家的历史死亡背包 | 管理员 |
+| `/death inv <player> <history> <page>` | 查看玩家的历史死亡背包 | 管理员/玩家 |
+| `/death toggle` | 开关复活后的消息提醒/控制台为开关debug消息 | 管理员/玩家/控制台 |
+
+
+
 
 ## 🔐 权限节点
 
@@ -82,9 +91,6 @@
     default: op
 ```
 
-> 
-> 默认权限说明：OP 默认拥有全部管理员权限；普通玩家仅拥有基础权限。
-
 ## 🗂️ 配置结构说明
 
 ```
@@ -99,7 +105,7 @@ plugins/插件文件夹名/
 规则：
 
 1. 请勿修改配置内所有 Key（键名），仅修改展示文本内容
-2. 文本支持 MiniMessage 格式，禁止老式 & 颜色代码与 MiniMessage 混用
+2. 文本支持 MiniMessage 格式
 3. 所有 `{变量}`、`%占位符%` 不允许汉化修改
 
 
