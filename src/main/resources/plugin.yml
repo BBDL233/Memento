@@ -1,5 +1,5 @@
 name: Memento
-version: 1.0.0
+version: 1.0.1
 main: com.bbdl.plugin.Memento
 api-version: '26.1'
 description: 管理玩家死亡的 Paper 插件
