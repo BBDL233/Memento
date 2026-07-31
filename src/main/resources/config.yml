@@ -464,3 +464,53 @@ messages:
         # 无法创建 menus 目录
         # 可用占位符: 无
         mkdir-failed-menus: "<red>无法创建 menus 目录</red>"
+
+        # ===== DeathListener 调试 =====
+
+        # onPlayerDeath 方法入口
+        # 可用占位符: {player}（死者名）
+        death-event-enter: "<gray>onPlayerDeath 触发:</gray> <aqua>{player}</aqua>"
+
+        # keepInv 权限生效，掉落已拦截
+        # 可用占位符: {player}
+        keep-inv-applied: "<aqua>{player}</aqua> <gray>触发 keepInv，掉落已拦截</gray>"
+
+        # keepXp 权限生效，经验已拦截
+        # 可用占位符: {player}
+        keep-xp-applied: "<aqua>{player}</aqua> <gray>触发 keepXp，经验已拦截</gray>"
+
+        # 进入"被玩家击杀"分支
+        # 可用占位符: {player}（死者）, {killer}（击杀者）, {weapon}（武器材质名）
+        branch-player-kill: "<gray>分支: 玩家击杀 |</gray> <aqua>{player}</aqua> <gray>←</gray> <red>{killer}</red> <gray>武器:</gray> <yellow>{weapon}</yellow>"
+
+        # 进入"环境死亡"分支
+        # 可用占位符: {player}（死者）, {cause}（死因枚举名）
+        branch-env-death: "<gray>分支: 环境死亡 |</gray> <aqua>{player}</aqua> <gray>死因:</gray> <yellow>{cause}</yellow>"
+
+        # 玩家使用了自定义死亡消息模板
+        # 可用占位符: {player}
+        custom-template-used: "<aqua>{player}</aqua> <gray>使用了自定义死亡消息模板</gray>"
+
+        # 广播循环结束，统计实际收到消息的人数
+        # 可用占位符: {count}（收到消息的玩家数）
+        broadcast-done: "<gray>广播完成，共</gray> <green>{count}</green> <gray>人收到</gray>"
+
+        # 背包克隆完成
+        # 可用占位符: {player}, {slots}（非空槽位数）, {total}（总槽位数）
+        inv-clone-done: "<aqua>{player}</aqua> <gray>背包克隆完成:</gray> <green>{slots}</green><gray>/</gray><green>{total}</green> <gray>非空</gray>"
+
+        # 持久化写入磁盘完成
+        # 可用占位符: {player}
+        save-done: "<aqua>{player}</aqua> <gray>数据已写入磁盘</gray>"
+
+        # onPlayerRespawn 方法入口
+        # 可用占位符: {player}（复活者名）
+        respawn-event-enter: "<gray>onPlayerRespawn 触发:</gray> <aqua>{player}</aqua>"
+
+        # 复活提醒成功发送
+        # 可用占位符: {player}, {world}, {x}, {y}, {z}
+        respawn-notify-sent: "<gray>复活提醒已发送:</gray> <aqua>{player}</aqua> <gray>→</gray> <yellow>{world} {x} {y} {z}</yellow>"
+
+        # 复活提醒被跳过
+        # 可用占位符: {player}, {reason}（"无死亡记录" 或 "提醒开关已关闭"）
+        respawn-notify-skipped: "<gray>复活提醒跳过:</gray> <aqua>{player}</aqua> <gray>原因:</gray> <yellow>{reason}</yellow>"

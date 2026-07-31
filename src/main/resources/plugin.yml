@@ -24,7 +24,7 @@ permissions:
     description: 能看到所有人的死亡广播
     default: op
   Memento.free-custom:
-    description: 管理员免扣费
+    description: 免扣费
     default: op
   Memento.get:
     description: 管理员获取玩家背包

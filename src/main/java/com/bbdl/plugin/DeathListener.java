@@ -66,27 +66,43 @@ public class DeathListener implements Listener {
      *   <li>持久化到磁盘</li>
      * </ol>
      */
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getPlayer();
         // getKiller()：如果是被其他玩家击杀则返回击杀者，否则返回 null
         Player killer = player.getKiller();
+
+        // [Debug] 死亡事件入口
+        msg.debug("messages.debug.death-event-enter",
+                "onPlayerDeath 触发: {player}",
+                Map.of("player", player.getName()));
 
         // 拦截死亡掉落
         if (player.hasPermission("Memento.keepInv")) {
             // 禁止掉落
             event.getDrops().clear();
             event.setKeepInventory(true);
+            // [Debug] keepInv 生效
+            msg.debug("messages.debug.keep-inv-applied",
+                    "{player} 触发 keepInv，掉落已拦截",
+                    Map.of("player", player.getName()));
         }
 
         // 拦截掉落经验
         if (player.hasPermission("Memento.keepXp")) {
             event.setKeepLevel(true);
+            // [Debug] keepXp 生效
+            msg.debug("messages.debug.keep-xp-applied",
+                    "{player} 触发 keepXp，经验已拦截",
+                    Map.of("player", player.getName()));
         }
 
         // 取消原版死亡消息（如 "Steve was slain by Notch"），由本插件接管广播
         // 传 null 表示不显示任何原版消息
         event.deathMessage(null);
+
+        // [Debug] 广播观众计数
+        int viewerCount = 0;
 
         // ===== 分支 1：被其他玩家击杀 =====
         if (killer != null) {
@@ -94,6 +110,14 @@ public class DeathListener implements Listener {
             ItemStack weaponItem = killer.getInventory().getItemInMainHand();
             // 取物品类型名（如 DIAMOND_SWORD），后续可在消息模板中自行映射为中文
             String weaponName = weaponItem.getType().name();
+
+            // [Debug] 进入玩家击杀分支
+            Map<String, String> killDbg = new HashMap<>();
+            killDbg.put("player", player.getName());
+            killDbg.put("killer", killer.getName());
+            killDbg.put("weapon", weaponName);
+            msg.debug("messages.debug.branch-player-kill",
+                    "分支: 玩家击杀 | 死者={player} 击杀者={killer} 武器={weapon}", killDbg);
 
             // 构建占位符映射
             Map<String, String> ph = new HashMap<>();
@@ -108,6 +132,10 @@ public class DeathListener implements Listener {
             if (customMsg != null && customMsg.byPlayer != null) {
                 // 有自定义模板 → 用自定义模板渲染（key 传 null，直接用 customMsg.byPlayer 作为模板）
                 deathMsg = msg.formatMsg(null, customMsg.byPlayer, ph, player);
+                // [Debug] 使用了自定义模板
+                msg.debug("messages.debug.custom-template-used",
+                        "{player} 使用了自定义 byPlayer 模板",
+                        Map.of("player", player.getName()));
             } else {
                 // 没有自定义模板 → 用 config 中的默认模板
                 deathMsg = msg.formatMsg("messages.normal.death-by-player",
@@ -123,6 +151,7 @@ public class DeathListener implements Listener {
 
                         || plugin.deathMessages.getOrDefault(viewer.getUniqueId(), true)) {
                     viewer.sendMessage(deathMsg);
+                    viewerCount++;
                 }
             }
         }
@@ -132,6 +161,13 @@ public class DeathListener implements Listener {
             EntityDamageEvent lastDamage = player.getLastDamageCause();
             // 防御性处理：极端情况下 lastDamage 可能为 null
             String causeName = (lastDamage != null) ? lastDamage.getCause().name() : "UNKNOWN";
+
+            // [Debug] 进入环境死亡分支
+            Map<String, String> causeDbg = new HashMap<>();
+            causeDbg.put("player", player.getName());
+            causeDbg.put("cause", causeName);
+            msg.debug("messages.debug.branch-env-death",
+                    "分支: 环境死亡 | 死者={player} 死因={cause}", causeDbg);
 
             // 构建占位符映射
             Map<String, String> ph = new HashMap<>();
@@ -144,6 +180,10 @@ public class DeathListener implements Listener {
             CustomDeathMsg customMsg = plugin.customDeathMsgMap.get(player.getUniqueId());
             if (customMsg != null && customMsg.byCause != null) {
                 deathMsg = msg.formatMsg(null, customMsg.byCause, ph, player);
+                // [Debug] 使用了自定义模板
+                msg.debug("messages.debug.custom-template-used",
+                        "{player} 使用了自定义 byCause 模板",
+                        Map.of("player", player.getName()));
             } else {
                 deathMsg = msg.formatMsg("messages.normal.death-by-cause",
                         "{player} 因为 {cause} 死亡", ph, null);
@@ -155,9 +195,15 @@ public class DeathListener implements Listener {
 
                         || plugin.deathMessages.getOrDefault(viewer.getUniqueId(), true)) {
                     viewer.sendMessage(deathMsg);
+                    viewerCount++;
                 }
             }
         }
+
+        // [Debug] 广播完成
+        msg.debug("messages.debug.broadcast-done",
+                "广播完成，共 {count} 人收到",
+                Map.of("count", String.valueOf(viewerCount)));
 
         // ===== 记录死亡数据到内存 =====
 
@@ -169,14 +215,24 @@ public class DeathListener implements Listener {
         // 如果不克隆，引用的 ItemStack 对象会随之变化，导致保存的数据不正确
         ItemStack[] oldinv = player.getInventory().getContents();
         ItemStack[] inv = new ItemStack[oldinv.length];
+        int nonNullSlots = 0;
         for (int i = 0; i < oldinv.length; i++) {
             if (oldinv[i] != null) {
                 inv[i] = oldinv[i].clone();  // 深拷贝，切断与原背包的引用关系
+                nonNullSlots++;
             }
             // null 槽位保持 null（表示该位置为空）
         }
         // 写入内存缓存（覆盖上一次的死亡背包，只保留最新一次）
         plugin.deathInv.put(player.getUniqueId(), inv);
+
+        // [Debug] 背包克隆完成
+        Map<String, String> invDbg = new HashMap<>();
+        invDbg.put("player", player.getName());
+        invDbg.put("slots", String.valueOf(nonNullSlots));
+        invDbg.put("total", String.valueOf(oldinv.length));
+        msg.debug("messages.debug.inv-clone-done",
+                "{player} 背包克隆完成: {slots}/{total} 非空", invDbg);
 
         // 输出调试日志（方便服主在控制台确认死亡事件是否正确触发）
         Map<String, String> logPh = new HashMap<>();
@@ -193,6 +249,11 @@ public class DeathListener implements Listener {
 
         // 持久化到磁盘（mode="death" → 生成新的时间戳文件，保存位置 + 背包）
         dm.saveData(player.getUniqueId(), "death");
+
+        // [Debug] 持久化完成
+        msg.debug("messages.debug.save-done",
+                "{player} 数据已写入磁盘",
+                Map.of("player", player.getName()));
     }
 
     // ==================== 玩家复活事件 ====================
@@ -210,6 +271,11 @@ public class DeathListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
 
+        // [Debug] 复活事件入口
+        msg.debug("messages.debug.respawn-event-enter",
+                "onPlayerRespawn 触发: {player}",
+                Map.of("player", player.getName()));
+
         // 从内存缓存中获取上次死亡位置
         Location deathLoc = plugin.deathLocations.get(player.getUniqueId());
         // 获取该玩家的复活提醒开关（默认 true = 开启）
@@ -225,6 +291,22 @@ public class DeathListener implements Listener {
             // 发送复活提醒消息（走消息系统，支持 config 自定义和 MiniMessage 颜色）
             player.sendMessage(msg.formatMsg("messages.normal.respawn-reminder",
                     "你上次死在了 {world} 的 {x} {y} {z}", ph, player));
+
+            // [Debug] 复活提醒已发送
+            Map<String, String> sentDbg = new HashMap<>();
+            sentDbg.put("player", player.getName());
+            sentDbg.put("world", deathLoc.getWorld().getName());
+            sentDbg.put("x", String.valueOf(deathLoc.getBlockX()));
+            sentDbg.put("y", String.valueOf(deathLoc.getBlockY()));
+            sentDbg.put("z", String.valueOf(deathLoc.getBlockZ()));
+            msg.debug("messages.debug.respawn-notify-sent",
+                    "复活提醒已发送: {player} → {world} {x} {y} {z}", sentDbg);
+        } else {
+            // [Debug] 复活提醒跳过
+            String reason = (deathLoc == null) ? "无死亡记录" : "提醒开关已关闭";
+            msg.debug("messages.debug.respawn-notify-skipped",
+                    "复活提醒跳过: {player}，原因: {reason}",
+                    Map.of("player", player.getName(), "reason", reason));
         }
     }
 }
